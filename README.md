@@ -1,2 +1,3 @@
 # b_finder
-Pipeline to map the turbulence driving parameter from column density and centroid velocity maps of observations 
+Pipeline to map the turbulence driving parameter from column density and centroid velocity maps of observations, following the methods outlined in Gerrard et al. 2023.
+This method takes centroid velocity and column density maps as input, and returns maps of the Mach number, volume density dispersion and driving parameter, along with intermediate data products. The calculations are performed inside a rolling Gaussian kernel which is related to the size of beam in the input data. A soundspeed must be assumed in order to get the Mach number, but the 3D velocity dispersion map is also returned, as is the column density dispersion.
