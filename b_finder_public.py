@@ -16,14 +16,13 @@ We are solving the equation:
 b_finder can be run as a script, called in full from another function, or you can just call calc_tdp which does the bulk of the work.
 
 __author__="Isabella Gerrard"
-__version__="2.0"
+__version__="4.0"
 __email__="isabella.gerrard@anu.edu.au"
-__status__="Production"
+__status__="Public"
 """
 
 import numpy as np
 from scipy import fftpack
-from scipy.stats import chisquare
 import argparse
 import os
 import sys
@@ -181,6 +180,20 @@ def get_corrected_column_density(M0, kernel):
     M0_corrected = M0_norm/M0_fit
     return M0_corrected
 
+def weighted_std(data, kernel, mask):
+    """
+    Calculate kernel-weighted standard deviation of 3D quantities.
+    Assumes data and weights has nans and is 2d arrays
+    """
+    data     = data[mask]
+    kernel   = kernel[mask]
+    if True in np.isnan(data):
+        return np.nan
+    else:
+        mean = np.average(data, weights=kernel)
+        ms   = np.average(data**2, weights=kernel)
+    return np.sqrt(ms-mean**2)
+
 def calc_tdp(mask, input_kernel, input_M0, input_M1, cs, vel_correction):
     """
     This function takes the data and, cleans it and produces the turbulence driving parameter in a single kernel instance.
@@ -214,20 +227,6 @@ def calc_tdp(mask, input_kernel, input_M0, input_M1, cs, vel_correction):
     tdp     = sigr_3d/mach 
 
     return R_sqrt, sigr_3d, mach, tdp, sig_cv, sigr_2d
-
-def weighted_std(data, kernel, mask):
-    """
-    Calculate kernel-weighted standard deviation of 3D quantities.
-    Assumes data and weights has nans and is 2d arrays
-    """
-    data     = data[mask]
-    kernel   = kernel[mask]
-    if True in np.isnan(data):
-        return np.nan
-    else:
-        mean = np.average(data, weights=kernel)
-        ms   = np.average(data**2, weights=kernel)
-    return np.sqrt(ms-mean**2)
 
 def process_file(m0, m1, sens=None, name=None, N_bpk=20, correct_v=3.3, pix2beam=30/7, diameter=3., sound_speed=8.3):
     """
@@ -337,10 +336,10 @@ def parse_args(process_args_locally=False):
     parser.add_argument("-m0",          "--m0",          type=None,  default=None, help="name of M0 map numpy file, or numpy array")
     parser.add_argument("-m1",          "--m1",          type=None,  default=None, help="name of M1 map numpy file, or numpy array")
     parser.add_argument("-sens",        "--sens",        type=str,   default=None, help="name of sensitivity map numpy file, or numpy array")
-    parser.add_argument("-N_bpk",       "--N_bpk",       type=float, default=10,   help="fwhm of kernel in beams")
-    parser.add_argument("-diameter",    "--diameter",    type=float, default=3.,   help="truncation diameter of gaussian kernel")
+    parser.add_argument("-N_bpk",       "--N_bpk",       type=float, default=10,   help="FWHM of kernel in beams")
+    parser.add_argument("-diameter",    "--diameter",    type=float, default=3.,   help="truncation diameter of gaussian kernel, i.e. 3 times the FWHM")
     parser.add_argument("-pix2beam",    "--pix2beam",    type=float, default=30/7, help="pixel to beam conversion")
-    parser.add_argument("-correct_v",   "--correct_v",   type=float, default=3.3,  help="Velocity correction factor to convert sigv1D to sigv3D, via Stewart method")
+    parser.add_argument("-correct_v",   "--correct_v",   type=float, default=3.3,  help="Velocity correction factor to convert sigv1D to sigv3D, via Stewart method (Stewart & Federrath 2022)")
     parser.add_argument("-sound_speed", "--sound_speed", type=None,  default=8.3,  help="Sound speed (km/s)")
 
     if process_args_locally:
